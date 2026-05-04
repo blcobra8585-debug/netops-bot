@@ -191,6 +191,7 @@ def cmd_start(message):
         "  /adminkey          Today's access key\n"
         "  /broadcast <msg>   Message all users\n"
         "  /users             Verified user count\n"
+        "  /adduser   <id>    Grant permanent access\n"
         "  /revoke    <id>    Remove user access\n"
         "\n"
         f"  ACCESS : {access_line}\n"
@@ -234,6 +235,31 @@ def cmd_users(message):
         f"  ──────────────────\n"
         f"  Total : {count} user(s)\n"
         f"  (Saved to file — survives restarts)\n"
+        f"```",
+        parse_mode="Markdown",
+    )
+
+@bot.message_handler(commands=["adduser"])
+def cmd_adduser(message):
+    if message.from_user.id not in ADMIN_IDS:
+        bot.reply_to(message, "🔒 Admin only command.")
+        return
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip().isdigit():
+        bot.reply_to(message, "⚠️ Usage: `/adduser <telegram_user_id>`", parse_mode="Markdown")
+        return
+    uid = int(parts[1].strip())
+    if uid in verified_users:
+        bot.reply_to(message, f"⚠️ User `{uid}` already has access.", parse_mode="Markdown")
+        return
+    add_verified_user(uid)
+    bot.reply_to(
+        message,
+        f"```\n"
+        f"  [ACCESS GRANTED]\n"
+        f"  ✅ User {uid} added manually.\n"
+        f"  They can now use /check.\n"
+        f"  Access saved permanently.\n"
         f"```",
         parse_mode="Markdown",
     )
